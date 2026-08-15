@@ -249,7 +249,7 @@
     <h2>Request received!</h2>
     <p>Thanks — we've emailed your plan summary. Pick a slot for your strategy call:</p>
     <div class="recap" id="modalRecap"></div>
-    <a class="cal" id="calBtn" href="https://calendly.com/YOUR-USERNAME/strategy-call" target="_blank" rel="noopener">
+    <a class="cal" id="calBtn" href="https://calendly.com/ahmedphiri240/30min" target="_blank" rel="noopener">
       Book your strategy call
     </a>
     <button class="close" id="modalClose">Close</button>
@@ -320,14 +320,6 @@
   }
 
   /* ================= CONFETTI config ================= */
-  /**
-   * Confetti burst configuration.
-   * @typedef {Object} ShapeConf
-   * @property {number} weight  relative mix weight of this shape (sum ~1 across shapes)
-   * @property {[number,number]} size  [min, max] base px size
-   * @property {number} jitter  fractional size jitter (±, e.g. 0.35 = ±35%)
-   * @property {number} driftLimit  max allowed mix drift before a dev warning
-   */
   const CONFETTI = {
     count: 90,
     gravity: 0.55,
@@ -766,6 +758,7 @@
     }).then(() => {
       openSuccess({ plan, weekly, monthly, total });
       showToast('Request sent! Check your inbox for the summary.', 'success');
+      window.open('https://calendly.com/ahmedphiri240/30min', '_blank', 'noopener');
       resetForm();
     }).catch(() => {
       showToast('Something went wrong sending your request. Please try again.', 'error');
@@ -819,6 +812,9 @@
   el('mbBtn').addEventListener('click', () => { form.scrollIntoView({ behavior: 'smooth' }); });
 
   /* ================= init ================= */
+  if (typeof emailjs !== 'undefined'){
+    emailjs.init('4D3tPfq3OiftjCvkI');
+  }
   loadState();
   prefillDate();
   recalc();

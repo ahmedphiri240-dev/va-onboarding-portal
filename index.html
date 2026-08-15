@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RemoteOps Portal — Onboarding & Cost Calculator</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#121a30; --panel2:#0e1526; --line:#1e2a44;
+    --text:#e6ecff; --muted:#94a3b8; --dim:#8494ab;
+    --indigo:#6366f1; --violet:#8b5cf6; --cyan:#22d3ee;
+    --good:#34d399; --bad:#f87171;
+    --brand1:#6366f1; --brand2:#8b5cf6;   /* ← your brand gradient hexes */
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:radial-gradient(1200px 600px at 80% -10%, rgba(139,92,246,.16), transparent 60%),
+               radial-gradient(900px 500px at -10% 10%, rgba(99,102,241,.14), transparent 55%), var(--bg);
+    color:var(--text);
+    font:16px/1.55 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  header{max-width:1180px;margin:0 auto;padding:28px 24px 8px;display:flex;align-items:center;gap:14px}
+  .brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--brand1),var(--brand2));
+    display:grid;place-items:center;font-weight:800;color:#fff;box-shadow:0 6px 18px rgba(99,102,241,.35)}
+  header h1{font-size:19px;font-weight:700;letter-spacing:.2px}
+  header p{color:var(--muted);font-size:13px}
+  .ver-tag{margin-left:auto;font-size:12px;color:var(--dim);background:var(--panel);border:1px solid var(--line);
+    padding:4px 10px;border-radius:999px;cursor:pointer;user-select:none;transition:border-color .2s}
+  .ver-tag:hover{border-color:var(--indigo);color:var(--text)}
+  main{max-width:1180px;margin:0 auto;padding:16px 24px 110px}
+  .hero h2{font-size:clamp(26px,4vw,38px);font-weight:800;line-height:1.15;margin-bottom:10px}
+  .hero h2 span{background:linear-gradient(90deg,var(--brand1),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p{color:var(--muted);max-width:640px;font-size:15px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:28px;margin-top:26px;align-items:start}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}.summary{position:static!important}}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .card h3{font-size:15px;font-weight:700;margin-bottom:14px}
+  .svc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.svc-grid{grid-template-columns:1fr}}
+  .service-card{appearance:none;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+    padding:14px;cursor:pointer;color:var(--text);transition:border-color .2s,background .2s,transform .15s;position:relative}
+  .service-card:hover{border-color:#33415f;transform:translateY(-1px)}
+  .service-card[aria-checked="true"]{border-color:var(--indigo);background:linear-gradient(180deg,rgba(99,102,241,.12),rgba(139,92,246,.08))}
+  .service-card .nm{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+  .service-card .rt{color:var(--dim);font-size:12px;margin-top:4px}
+  .check-badge{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;margin-left:auto;color:#fff;font-size:11px}
+  .service-card[aria-checked="true"] .check-badge{background:linear-gradient(135deg,var(--brand1),var(--brand2));border-color:transparent}
+  .range-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .hours-val{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums}
+  .hours-val small{font-size:14px;color:var(--muted);font-weight:500}
+  input[type=range]{width:100%;accent-color:var(--indigo);margin:10px 0 2px;height:28px;cursor:pointer}
+  .ticks{display:flex;justify-content:space-between;color:var(--dim);font-size:10.5px;padding:0 2px}
+  .presets{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .preset{min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);
+    color:var(--text);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+  .preset:hover{border-color:var(--indigo);color:#fff}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .chip{font-size:12px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 10px;display:inline-flex;gap:6px;align-items:center}
+  .chip b{color:var(--text);font-variant-numeric:tabular-nums;display:inline-block;min-width:22px;text-align:right}
+  .chip.bump{animation:chipPop .3s ease}
+  @keyframes chipPop{0%{transform:scale(1)}35%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .summary{position:sticky;top:20px}
+  .summary .row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .summary .row:last-child{border-bottom:none}
+  .summary .row .lbl{color:var(--muted)}
+  .summary .row .val{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+  .summary .big{font-size:22px;font-weight:800}
+  .summary .big span{background:linear-gradient(90deg,var(--brand1),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .summary .svc-line{font-size:13px;color:var(--text)}
+  .cta{margin-top:18px;width:100%;min-height:52px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--brand1),var(--brand2));
+    color:#fff;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(99,102,241,.35);transition:transform .15s,box-shadow .2s}
+  .cta:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(99,102,241,.45)}
+  form{margin-top:26px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+  .input-wrap{position:relative}
+  .input-wrap input{width:100%;min-height:46px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+    color:var(--text);padding:10px 38px 10px 12px;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
+  .input-wrap input:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,.18)}
+  .input-wrap .ic{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:15px;opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .25s}
+  .input-wrap .ic.bad{color:var(--bad)}
+  .input-wrap .ic.good{color:var(--good)}
+  .field.error .ic.bad{opacity:1;animation:iconIn .3s ease}
+  .field.error .ic.bad::after{content:"";position:absolute;inset:-3px;border-radius:50%;animation:pulse 1.6s ease-in-out infinite}
+  @keyframes iconIn{0%{opacity:0;transform:translateY(-50%) scale(.6)}60%{opacity:1;transform:translateY(-50%) scale(1.15)}100%{transform:translateY(-50%) scale(1)}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.35)}50%{box-shadow:0 0 0 6px rgba(248,113,113,0)}}
+  .field.valid .ic.good{opacity:1;animation:iconIn .3s ease}
+  .field.error .input-wrap input{border-color:var(--bad);box-shadow:0 0 0 3px rgba(248,113,113,.15)}
+  .field.error .input-wrap input.invalid{animation:shake .35s ease}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+  .err-msg{display:none;color:var(--bad);font-size:12.5px;margin-top:6px}
+  .field.error .err-msg{display:block}
+  .field.prefilled input{animation:prefillPulse 1.6s ease-in-out infinite}
+  @keyframes prefillPulse{0%,100%{border-color:rgba(34,211,238,.5);box-shadow:0 0 0 3px rgba(34,211,238,.18)}
+    50%{border-color:rgba(34,211,238,.8);box-shadow:0 0 0 6px rgba(34,211,238,.3)}}
+  .submit-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:22px}
+  .btn{min-height:44px;padding:10px 22px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,24px);opacity:0;pointer-events:none;
+    background:var(--panel);border:1px solid var(--line);color:var(--text);padding:12px 18px;border-radius:12px;
+    font-size:14px;font-weight:600;box-shadow:0 12px 34px rgba(0,0,0,.45);transition:transform .3s,opacity .3s;z-index:60;max-width:90vw}
+  .toast.show{transform:translate(-50%,0);opacity:1}
+  .toast.success{border-color:rgba(52,211,153,.5)}
+  .toast.error{border-color:rgba(248,113,113,.5)}
+  .toast.info{border-color:rgba(34,211,238,.5)}
+  .modal-overlay{position:fixed;inset:0;background:rgba(5,8,18,.72);backdrop-filter:blur(4px);display:grid;place-items:center;
+    padding:20px;z-index:70;opacity:0;pointer-events:none;transition:opacity .25s}
+  .modal-overlay.open{opacity:1;pointer-events:auto}
+  .modal{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:20px;
+    max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:30px;text-align:center;transform:scale(.92);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+  .modal-overlay.open .modal{transform:scale(1)}
+  .modal .tick{width:54px;height:54px;margin:0 auto 14px;border-radius:50%;background:linear-gradient(135deg,var(--good),#10b981);
+    display:grid;place-items:center;font-size:26px;color:#fff}
+  .modal h2{font-size:24px;font-weight:800;margin-bottom:6px}
+  .modal p{color:var(--muted);font-size:14px;margin-bottom:18px}
+  .modal .recap{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:left;margin-bottom:18px;font-size:13.5px}
+  .modal .recap .row{display:flex;justify-content:space-between;gap:10px;padding:5px 0}
+  .modal .recap .lbl{color:var(--muted)}
+  .modal .recap .val{font-weight:700;font-variant-numeric:tabular-nums}
+  .modal .cal{display:block;width:100%;min-height:48px;line-height:48px;border-radius:12px;background:linear-gradient(135deg,var(--brand1),var(--brand2));
+    color:#fff;font-size:15px;font-weight:700;text-decoration:none}
+  .modal .close{margin-top:10px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer}
+  .confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:80;overflow:hidden}
+  footer{max-width:1180px;margin:0 auto;padding:24px;color:var(--dim);font-size:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .mb-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;align-items:center;justify-content:space-between;
+    gap:12px;background:rgba(11,16,32,.92);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 16px 14px}
+  .mb-bar .lbl{color:var(--muted);font-size:12px}
+  .mb-bar .amt{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+  .mb-btn{min-height:44px;padding:10px 18px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--brand1),var(--brand2));
+    color:#fff;font-size:14px;font-weight:700;cursor:pointer}
+  @media(max-width:980px){.mb-bar{display:flex}}
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+    .field.prefilled input{animation:none;border-color:rgba(34,211,238,.55);box-shadow:0 0 0 4px rgba(34,211,238,.18);transition-duration:.8s!important}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand-mark" aria-hidden="true">R</div>
+  <div><h1>RemoteOps Portal</h1><p>Virtual Assistant &amp; Remote Ops agency</p></div>
+  <button class="ver-tag" id="verTag" title="Click to copy version" aria-label="Click to copy version">v1.2.0</button>
+</header>
+
+<main>
+  <section class="hero">
+    <h2>Build your <span>support plan</span> in seconds.</h2>
+    <p>Pick services, slide your weekly hours, and see your estimated monthly investment live. No calls, no spreadsheets.</p>
+  </section>
+
+  <div class="grid">
+    <div>
+      <section class="card" aria-label="Services">
+        <h3>1 · Choose your services</h3>
+        <div class="svc-grid" id="svcGrid"></div>
+      </section>
+
+      <section class="card" style="margin-top:22px" aria-label="Weekly hours">
+        <h3>2 · Set weekly hours</h3>
+        <div class="range-row">
+          <span class="hours-val" id="hoursVal">20<small> hrs/wk</small></span>
+          <span class="preset" tabindex="0" role="button" data-hours="10">10h</span>
+          <span class="preset" tabindex="0" role="button" data-hours="20">20h</span>
+          <span class="preset" tabindex="0" role="button" data-hours="30">30h</span>
+        </div>
+        <input type="range" id="hoursSlider" min="5" max="40" step="5" value="20"
+               aria-label="Weekly support hours" aria-valuemin="5" aria-valuemax="40" aria-valuenow="20">
+        <div class="ticks" id="ticks"></div>
+        <div class="chip-row" id="chipRow" aria-label="Per-service hour breakdown"></div>
+      </section>
+
+      <form id="onboardForm" novalidate>
+        <section class="card" aria-label="Your details">
+          <h3>3 · Your details</h3>
+          <div class="field" id="f-name">
+            <label for="inpName">Client name</label>
+            <div class="input-wrap">
+              <input id="inpName" name="name" type="text" placeholder="Jane Cooper" autocomplete="name">
+              <span class="ic bad" aria-hidden="true">!</span>
+              <span class="ic good" aria-hidden="true">✓</span>
+            </div>
+            <div class="err-msg">Please enter your name.</div>
+          </div>
+          <div class="field" id="f-company">
+            <label for="inpCompany">Company name</label>
+            <div class="input-wrap">
+              <input id="inpCompany" name="company" type="text" placeholder="Acme Inc." autocomplete="organization">
+              <span class="ic bad" aria-hidden="true">!</span>
+              <span class="ic good" aria-hidden="true">✓</span>
+            </div>
+            <div class="err-msg">Please enter your company name.</div>
+          </div>
+          <div class="field" id="f-email">
+            <label for="inpEmail">Email address</label>
+            <div class="input-wrap">
+              <input id="inpEmail" name="email" type="email" placeholder="jane@company.com" autocomplete="email">
+              <span class="ic bad" aria-hidden="true">!</span>
+              <span class="ic good" aria-hidden="true">✓</span>
+            </div>
+            <div class="err-msg">Please enter a valid email.</div>
+          </div>
+          <div class="field" id="f-date">
+            <label for="inpDate">Target start date</label>
+            <div class="input-wrap">
+              <input id="inpDate" name="date" type="date">
+              <span class="ic bad" aria-hidden="true">!</span>
+              <span class="ic good" aria-hidden="true">✓</span>
+            </div>
+            <div class="err-msg">Please pick a future start date.</div>
+          </div>
+          <div class="submit-row">
+            <button type="submit" class="btn primary" id="submitBtn">Submit Request &amp; Book Strategy Call</button>
+            <button type="reset" class="btn ghost" id="resetBtn">Reset</button>
+          </div>
+        </section>
+      </form>
+    </div>
+
+    <aside class="card summary" id="summaryCard" aria-label="Live estimate">
+      <h3>Live estimate</h3>
+      <div id="sumServices"><p style="color:var(--dim);font-size:13px">No services selected yet.</p></div>
+      <div class="row"><span class="lbl">Total weekly hours</span><span class="val" id="sumHours">0</span></div>
+      <div class="row"><span class="lbl">Blended rate</span><span class="val" id="sumRate">—</span></div>
+      <div class="row"><span class="lbl">Weekly investment</span><span class="val" id="sumWeekly">$0</span></div>
+      <div class="row big"><span class="lbl">Estimated monthly</span><span class="val big" id="sumMonthly"><span>$0</span></span></div>
+      <p style="color:var(--dim);font-size:12px;margin-top:10px">Typical turnaround: plan delivered within 48h of your strategy call.</p>
+      <button class="cta" id="ctaScroll">Start my plan</button>
+    </aside>
+  </div>
+</main>
+
+<div class="mb-bar" id="mbBar">
+  <div><div class="lbl">Estimated monthly</div><div class="amt" id="mbMonthly">$0</div></div>
+  <button class="mb-btn" id="mbBtn">Submit &amp; Book</button>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-label="Request received">
+  <div class="modal" tabindex="-1">
+    <div class="tick" aria-hidden="true">✓</div>
+    <h2>Request received!</h2>
+    <p>Thanks — we've emailed your plan summary. Pick a slot for your strategy call:</p>
+    <div class="recap" id="modalRecap"></div>
+    <a class="cal" id="calBtn" href="https://calendly.com/YOUR-USERNAME/strategy-call" target="_blank" rel="noopener">
+      Book your strategy call
+    </a>
+    <button class="close" id="modalClose">Close</button>
+  </div>
+</div>
+
+<footer>
+  <span>RemoteOps Portal — estimated figures, subject to a final strategy call.</span>
+  <span>v1.2.0</span>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ================= utilities ================= */
+  /** @returns {number} random value in [min, max] (inclusive) */
+  function randBetween(min, max){ return min + Math.random() * (max - min); }
+  /** @returns {number} shape size with random jitter applied within its bounds */
+  function jitteredSize(size, jitter){ return size * (1 + randBetween(-jitter, jitter)); }
+  const fmtMoney = n => '$' + Math.round(n).toLocaleString('en-US');
+  const fmtHours = n => Math.round(n);
+  const el = id => document.getElementById(id);
+
+  /* ================= calc (inlined — single-file) ================= */
+  function allocateHours(totalHours, svcs){
+    const alloc = {};
+    if (!svcs.length) return { alloc, weekly: 0, blended: 0 };
+    const base = Math.floor(totalHours / svcs.length);
+    let rem = totalHours % svcs.length;
+    let weekly = 0;
+    svcs.forEach(s => {
+      const h = base + (rem > 0 ? 1 : 0);
+      rem--;
+      alloc[s.id] = h;
+      weekly += h * s.rate;
+    });
+    return { alloc, weekly, blended: weekly / totalHours };
+  }
+  const monthlyTotal = weekly => weekly * 4;
+  function validateField(key, value, now = new Date()){
+    switch (key){
+      case 'name':    return value.trim().length >= 2;
+      case 'company': return value.trim().length >= 2;
+      case 'email':   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+      case 'date':    return !!value && new Date(value + 'T00:00:00') >= new Date(now.toDateString());
+      default:        return true;
+    }
+  }
+  function todayISO(now = new Date()){
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  function addDays(days, now = new Date()){
+    const d = new Date(now);
+    d.setDate(d.getDate() + days);
+    return todayISO(d);
+  }
+
+  /* ================= DEV + console group ================= */
+  const DEV = location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.protocol === 'file:';
+  if (DEV){
+    console.groupCollapsed('%c⚡ DEV mode %cv1.2.0', 'font-weight:bold;color:#22d3ee', 'color:#8494ab');
+    console.log('CONFETTI config:', CONFETTI);
+    console.groupEnd();
+  }
+
+  /* ================= CONFETTI config ================= */
+  /**
+   * Confetti burst configuration.
+   * @typedef {Object} ShapeConf
+   * @property {number} weight  relative mix weight of this shape (sum ~1 across shapes)
+   * @property {[number,number]} size  [min, max] base px size
+   * @property {number} jitter  fractional size jitter (±, e.g. 0.35 = ±35%)
+   * @property {number} driftLimit  max allowed mix drift before a dev warning
+   */
+  const CONFETTI = {
+    count: 90,
+    gravity: 0.55,
+    colors: ['#6366f1','#8b5cf6','#a78bfa','#c4b5fd','#f59e0b','#fbbf24'],
+    duration: 2600,
+    shapes: {
+      rect:   { weight: 0.60, size: [6, 12],  jitter: 0.35, driftLimit: 0.08 },
+      star:   { weight: 0.25, size: [10, 16], jitter: 0.40, driftLimit: 0.09 },
+      circle: { weight: 0.15, size: [5, 9],   jitter: 0.30, driftLimit: 0.07 }
+    }
+  };
+
+  function collectConfettiIssues(){
+    const issues = [];
+    for (const [name, conf] of Object.entries(CONFETTI.shapes)){
+      if (!Array.isArray(conf.size) || conf.size.length !== 2 || conf.size.some(n => typeof n !== 'number'))
+        issues.push(`shape "${name}": missing/malformed size [min,max]`);
+      if (typeof conf.jitter !== 'number')
+        issues.push(`shape "${name}": missing jitter`);
+      if (typeof conf.driftLimit !== 'number')
+        issues.push(`shape "${name}": missing driftLimit`);
+    }
+    if (DEV && issues.length) console.warn('CONFETTI config issues:\n' + issues.map(i => '  - ' + i).join('\n'));
+    return issues;
+  }
+  collectConfettiIssues();
+
+  const shapeNames = Object.keys(CONFETTI.shapes);
+  const mixCounts = Object.fromEntries(shapeNames.map(s => [s, 0]));
+  let mixTotal = 0;
+
+  function pickShape(){
+    const total = shapeNames.reduce((a, s) => a + CONFETTI.shapes[s].weight, 0);
+    let r = Math.random() * total;
+    for (const s of shapeNames){
+      r -= CONFETTI.shapes[s].weight;
+      if (r <= 0) return s;
+    }
+    return shapeNames[0];
+  }
+
+  function checkMixDrift(){
+    for (const s of shapeNames){
+      const actual = mixTotal ? mixCounts[s] / mixTotal : 0;
+      const drift = Math.abs(actual - CONFETTI.shapes[s].weight);
+      if (DEV && drift > CONFETTI.shapes[s].driftLimit)
+        console.warn(`confetti mix drift: ${s} actual ${actual.toFixed(2)} vs weight ${CONFETTI.shapes[s].weight.toFixed(2)}`);
+    }
+  }
+
+  function burstConfetti(){
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(layer);
+    const shapeLog = {};
+
+    for (let i = 0; i < CONFETTI.count; i++){
+      const shape = pickShape();
+      mixCounts[shape]++; mixTotal++;
+      shapeLog[shape] = (shapeLog[shape] || 0) + 1;
+
+      const conf = CONFETTI.shapes[shape];
+      const size = jitteredSize(randBetween(conf.size[0], conf.size[1]), conf.jitter);
+      const elc = document.createElement('span');
+      elc.style.cssText = `position:absolute;left:${randBetween(30,70)}vw;top:${randBetween(20,45)}vh;` +
+        `width:${size}px;height:${shape === 'rect' ? size * 0.45 + 'px' : size + 'px'};` +
+        `background:${CONFETTI.colors[(Math.random() * CONFETTI.colors.length) | 0]};` +
+        `border-radius:${shape === 'circle' ? '50%' : '1px'};will-change:transform,opacity;`;
+      if (shape === 'star'){
+        elc.innerHTML = '★';
+        elc.style.background = 'transparent';
+        elc.style.color = '#fbbf24';
+        elc.style.fontSize = size + 'px';
+        elc.style.lineHeight = '1';
+        elc.style.width = 'auto'; elc.style.height = 'auto';
+      }
+      layer.appendChild(elc);
+      animatePiece(elc);
+    }
+
+    if (DEV){
+      console.groupCollapsed(`burst — ${JSON.stringify(shapeLog)}`);
+      console.log('counts:', mixCounts, 'total:', mixTotal);
+      console.groupEnd();
+      checkMixDrift();
+    }
+    setTimeout(() => layer.remove(), CONFETTI.duration);
+  }
+
+  function animatePiece(p){
+    let x = parseFloat(p.style.left), y = parseFloat(p.style.top);
+    let vx = randBetween(-1.4, 1.4), vy = randBetween(-3.2, -1.2);
+    let rot = randBetween(0, 360), vr = randBetween(-8, 8);
+    const t0 = performance.now();
+    (function frame(now){
+      const t = (now - t0) / 1000;
+      if (t > CONFETTI.duration / 1000) return;
+      vy += CONFETTI.gravity;
+      x += vx; y += vy; rot += vr;
+      p.style.transform = `translate(${x}px,${y}px) rotate(${rot}deg)`;
+      p.style.opacity = 1 - t / (CONFETTI.duration / 1000);
+      requestAnimationFrame(frame);
+    })(t0);
+  }
+
+  if (DEV){
+    window.__burstConfetti = burstConfetti;
+    window.__confettiDebug = { VERSION: '1.2.0', collectConfettiIssues };
+  }
+
+  /* ================= spring physics ================= */
+  class NumberSpring{
+    constructor(value, onUpdate, { stiffness = 160, damping = 16 } = {}){
+      this.target = this.pos = value;
+      this.vel = 0;
+      this.stiffness = stiffness; this.damping = damping;
+      this.onUpdate = onUpdate; this.running = false; this.last = 0;
+    }
+    set(target){
+      this.target = target;                    // redirect keeps current velocity
+      if (!this.running){
+        this.running = true; this.last = performance.now();
+        requestAnimationFrame(this.step.bind(this));
+      }
+    }
+    step(now){
+      const dt = Math.min((now - this.last) / 1000, 0.05);
+      this.last = now;
+      const acc = (this.target - this.pos) * this.stiffness - this.vel * this.damping;
+      this.vel += acc * dt;
+      this.pos += this.vel * dt;
+      this.onUpdate(this.pos);
+      if (Math.abs(this.target - this.pos) < 0.01 && Math.abs(this.vel) < 0.01){
+        this.pos = this.target; this.vel = 0; this.onUpdate(this.pos);
+        this.running = false;
+        return;
+      }
+      requestAnimationFrame(this.step.bind(this));
+    }
+  }
+
+  /* ================= services ================= */
+  const SERVICES = [
+    { id: 'exec',   name: 'Executive & Admin Support',          rate: 25 },
+    { id: 'social', name: 'Social Media & Content Scheduling',  rate: 30 },
+    { id: 'inbox',  name: 'Inbox & Calendar Management',        rate: 20 },
+    { id: 'tech',   name: 'Tech Setup & Workflow Automation',   rate: 40 }
+  ];
+  const selected = new Set();
+  const svcGrid = el('svcGrid');
+
+  SERVICES.forEach(s => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'service-card';
+    btn.setAttribute('role', 'checkbox');
+    btn.setAttribute('aria-checked', 'false');
+    btn.innerHTML = `<span class="nm">${s.name}<span class="check-badge" aria-hidden="true">✓</span></span>` +
+                    `<span class="rt">$${s.rate}/hr</span>`;
+    btn.addEventListener('click', () => {
+      selected.has(s.id) ? selected.delete(s.id) : selected.add(s.id);
+      btn.setAttribute('aria-checked', selected.has(s.id) ? 'true' : 'false');
+      saveSoon(); recalc();
+    });
+    svcGrid.appendChild(btn);
+  });
+
+  /* ================= slider + ticks + presets ================= */
+  const slider = el('hoursSlider');
+  const hoursVal = el('hoursVal');
+  const ticksEl = el('ticks');
+  for (let v = 5; v <= 40; v += 5){
+    const t = document.createElement('span');
+    t.textContent = v;
+    ticksEl.appendChild(t);
+  }
+
+  const snap = v => Math.max(5, Math.min(40, Math.round(v / 5) * 5));
+
+  const sliderSpring = new NumberSpring(20, v => {
+    const snapped = snap(v);
+    slider.value = snapped;
+    slider.setAttribute('aria-valuenow', String(snapped));
+    hoursVal.innerHTML = `${snapped}<small> hrs/wk</small>`;
+  }, { stiffness: 90, damping: 13 });
+
+  slider.addEventListener('input', () => {
+    sliderSpring.set(snap(+slider.value));
+    saveSoon(); recalc();
+  });
+
+  document.querySelectorAll('.preset').forEach(p => {
+    p.addEventListener('click', () => sliderSpring.set(+p.dataset.hours));
+    p.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); sliderSpring.set(+p.dataset.hours); }
+    });
+  });
+
+  /* ================= chips ================= */
+  const chipRow = el('chipRow');
+  const chipSprings = new Map();
+
+  function renderChips(alloc){
+    SERVICES.forEach(s => {
+      const h = alloc[s.id] || 0;
+      let chip = chipRow.querySelector(`[data-id="${s.id}"]`);
+      if (!chip){
+        chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.dataset.id = s.id;
+        chip.innerHTML = `<span>${s.name}</span> <b>0h</b>`;
+        chipRow.appendChild(chip);
+      }
+      const valEl = chip.querySelector('b');
+      if (!chipSprings.has(s.id)){
+        chipSprings.set(s.id, new NumberSpring(h, v => {
+          valEl.textContent = fmtHours(v) + 'h';
+        }, { stiffness: 140, damping: 14 }));
+      }
+      chipSprings.get(s.id).set(h);
+      chip.classList.remove('bump');
+      void chip.offsetWidth;
+      chip.classList.add('bump');
+    });
+  }
+
+  /* ================= summary + mobile bar ================= */
+  const sumServicesEl = el('sumServices'), sumHoursEl = el('sumHours'),
+        sumRateEl = el('sumRate'), sumWeeklyEl = el('sumWeekly'),
+        sumMonthlyEl = el('sumMonthly').firstElementChild, mbMonthlyEl = el('mbMonthly');
+
+  const springs = {
+    hours:  new NumberSpring(0, v => { sumHoursEl.textContent = fmtHours(v) + 'h'; }),
+    rate:   new NumberSpring(0, v => { sumRateEl.textContent = v > 0 ? '$' + Math.round(v) + '/hr' : '—'; }),
+    weekly: new NumberSpring(0, v => { sumWeeklyEl.textContent = fmtMoney(v); }),
+    monthly:new NumberSpring(0, v => { sumMonthlyEl.textContent = fmtMoney(v); mbMonthlyEl.textContent = fmtMoney(v); })
+  };
+
+  function recalc(){
+    const total = +slider.value || 0;
+    const svcs = SERVICES.filter(s => selected.has(s.id));
+    const { alloc, weekly, blended } = allocateHours(total, svcs);
+    renderChips(alloc);
+
+    sumServicesEl.innerHTML = svcs.length
+      ? svcs.map(s => `<div class="row svc-line"><span class="lbl">${s.name}</span><span class="val">$${s.rate}/hr</span></div>`).join('')
+      : '<p style="color:var(--dim);font-size:13px">No services selected yet.</p>';
+
+    springs.hours.set(total);
+    springs.rate.set(blended || 0);
+    springs.weekly.set(weekly);
+    springs.monthly.set(monthlyTotal(weekly));
+  }
+
+  /* ================= toast ================= */
+  const toast = el('toast');
+  let toastTimer = null;
+  function showToast(msg, variant = 'info', duration = 3200){
+    toast.textContent = msg;
+    toast.className = 'toast show ' + variant;
+    toast.setAttribute('role', variant === 'error' ? 'alert' : 'status');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+  }
+
+  /* ================= form state ================= */
+  function setFieldState(wrap, { error, valid } = {}){
+    const w = el(wrap);
+    if (error !== undefined) w.classList.toggle('error', error);
+    if (valid !== undefined) w.classList.toggle('valid', valid);
+    if (error !== undefined){
+      const inp = w.querySelector('input');
+      if (inp){
+        inp.setAttribute('aria-invalid', error ? 'true' : 'false');
+        const msg = w.querySelector('.err-msg');
+        if (error && msg){
+          if (!msg.id) msg.id = wrap + '-msg';
+          inp.setAttribute('aria-describedby', msg.id);
+          if (!msg.hasAttribute('aria-live')) msg.setAttribute('aria-live', 'polite');
+        } else {
+          inp.removeAttribute('aria-describedby');
+          if (msg && msg.dataset.text) msg.textContent = msg.dataset.text;
+        }
+      }
+    }
+  }
+
+  const fields = {
+    name:    [el('inpName'),    'f-name'],
+    company: [el('inpCompany'), 'f-company'],
+    email:   [el('inpEmail'),   'f-email'],
+    date:    [el('inpDate'),    'f-date']
+  };
+
+  Object.entries(fields).forEach(([key, [inp, wrap]]) => {
+    inp.addEventListener('input', () => {
+      setFieldState(wrap, { error: false, valid: false });
+      saveSoon();
+    });
+    inp.addEventListener('blur', () => {
+      const w = el(wrap);
+      setFieldState(wrap, { valid: !w.classList.contains('error') && validateField(key, inp.value) });
+    });
+  });
+
+  /* ================= prefill date ================= */
+  const dateInput = el('inpDate');
+  dateInput.min = todayISO();
+
+  let prefillTimer = null;
+  function dismissPrefill(){
+    clearTimeout(prefillTimer);
+    el('f-date').classList.remove('prefilled');
+  }
+  function prefillDate(){
+    if (!dateInput.value){
+      dateInput.value = addDays(14);
+      el('f-date').classList.add('prefilled');
+      clearTimeout(prefillTimer);
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      prefillTimer = setTimeout(dismissPrefill, reduced ? 4000 : 3000);
+    }
+  }
+  dateInput.addEventListener('focus', e => { if (e.isTrusted) dismissPrefill(); });
+  dateInput.addEventListener('input', e => { if (e.isTrusted) dismissPrefill(); });
+
+  /* ================= localStorage ================= */
+  let saveTimer = null;
+  const SAVE_KEY = 'remoteops-state';
+  function saveSoon(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(save, 300);
+  }
+  function save(){
+    const data = {
+      services: [...selected],
+      hours: slider.value,
+      form: { name: el('inpName').value, company: el('inpCompany').value,
+              email: el('inpEmail').value, date: dateInput.value }
+    };
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch(e){}
+  }
+  function loadState(){
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch(e){}
+    if (!data) return;
+    (data.services || []).forEach(id => {
+      if (!SERVICES.find(s => s.id === id)) return;
+      selected.add(id);
+      const card = [...svcGrid.children].find(c => c.textContent.includes(SERVICES.find(s => s.id === id).name));
+      if (card) card.setAttribute('aria-checked', 'true');
+    });
+    if (data.hours){ slider.value = snap(+data.hours); sliderSpring.set(snap(+data.hours)); }
+    if (data.form){
+      el('inpName').value = data.form.name || '';
+      el('inpCompany').value = data.form.company || '';
+      el('inpEmail').value = data.form.email || '';
+      if (data.form.date) dateInput.value = data.form.date;
+    }
+  }
+
+  /* ================= submit ================= */
+  const form = el('onboardForm');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const svcs = SERVICES.filter(s => selected.has(s.id));
+
+    if (!svcs.length){
+      showToast('Select at least one service to continue.', 'error');
+      return;
+    }
+
+    let ok = true;
+    const setErr = (key, bad) => {
+      const [inp, wrap] = fields[key];
+      setFieldState(wrap, { error: bad, valid: !bad });
+      if (bad){
+        inp.classList.remove('invalid');
+        void inp.offsetWidth;
+        inp.classList.add('invalid');
+        ok = false;
+      }
+    };
+
+    const val = {
+      name: el('inpName').value.trim(),
+      company: el('inpCompany').value.trim(),
+      email: el('inpEmail').value.trim(),
+      date: dateInput.value
+    };
+
+    setErr('name',    !validateField('name', val.name));
+    setErr('company', !validateField('company', val.company));
+    setErr('email',   !validateField('email', val.email));
+    setErr('date',    !validateField('date', val.date));
+
+    if (!ok){
+      const bad = Object.keys(fields).filter(k =>
+        el(fields[k][1]).classList.contains('error'));
+      const [inp, wrap] = fields[bad[0]];
+      const msg = document.querySelector('#' + wrap + ' .err-msg');
+      if (msg){
+        if (!msg.dataset.text) msg.dataset.text = msg.textContent;
+        msg.textContent = bad.length > 1
+          ? msg.dataset.text + ` (${bad.length - 1} more field${bad.length > 2 ? 's' : ''} need attention)`
+          : msg.dataset.text;
+      }
+      inp.focus();
+      return;
+    }
+
+    const total = +slider.value;
+    const { alloc, weekly } = allocateHours(total, svcs);
+    const monthly = monthlyTotal(weekly);
+
+    const plan = svcs.map(s => ({
+      name: s.name, rate: s.rate, hours: alloc[s.id], subtotal: alloc[s.id] * s.rate
+    }));
+    const planHtml =
+      '<table><tr><th>Service</th><th>Rate</th><th>Hrs/wk</th><th>Subtotal</th></tr>' +
+      plan.map(p => `<tr><td>${p.name}</td><td>$${p.rate}</td><td>${p.hours}</td><td>$${p.subtotal}</td></tr>`).join('') +
+      `<tr><td colspan="3"><b>Weekly total</b></td><td><b>$${weekly}</b></td></tr>` +
+      `<tr><td colspan="3"><b>Monthly (×4)</b></td><td><b>$${monthly}</b></td></tr></table>`;
+
+    emailjs.send('service_f10yfke', 'template_aoq2spf', {
+      name: val.name,
+      email: val.email,
+      company: val.company,
+      date: val.date,
+      plan,
+      planHtml,
+      totalWeekly: weekly,
+      monthlyTotal: monthly
+    }).then(() => {
+      openSuccess({ plan, weekly, monthly, total });
+      showToast('Request sent! Check your inbox for the summary.', 'success');
+      resetForm();
+    }).catch(() => {
+      showToast('Something went wrong sending your request. Please try again.', 'error');
+    });
+  });
+
+  /* ================= success modal ================= */
+  const overlay = el('modalOverlay');
+  const recapEl = el('modalRecap');
+
+  function openSuccess(data){
+    recapEl.innerHTML = data.plan.map(p =>
+      `<div class="row"><span class="lbl">${p.name} (${p.hours}h × $${p.rate})</span><span class="val">$${p.subtotal}</span></div>`
+    ).join('') +
+    `<div class="row"><span class="lbl">Total weekly hours</span><span class="val" id="mHours">0</span></div>` +
+    `<div class="row"><span class="lbl">Monthly investment</span><span class="val" id="mMonthly">$0</span></div>`;
+
+    overlay.classList.add('open');
+    burstConfetti();
+
+    const modalSprings = {
+      hours: new NumberSpring(0, v => { el('mHours').textContent = fmtHours(v) + 'h'; }),
+      monthly: new NumberSpring(0, v => { el('mMonthly').textContent = fmtMoney(v); })
+    };
+    modalSprings.hours.set(data.total);
+    modalSprings.monthly.set(data.monthly);
+  }
+
+  el('modalClose').addEventListener('click', () => overlay.classList.remove('open'));
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+  /* ================= reset ================= */
+  el('resetBtn').addEventListener('click', () => resetForm());
+  function resetForm(){
+    selected.clear();
+    svcGrid.querySelectorAll('.service-card').forEach(c => c.setAttribute('aria-checked', 'false'));
+    Object.values(fields).forEach(([inp, wrap]) => setFieldState(wrap, { error: false, valid: false }));
+    el('inpName').value = el('inpCompany').value = el('inpEmail').value = '';
+    slider.value = 20; sliderSpring.set(20);
+    prefillDate();
+    save();
+    recalc();
+  }
+
+  /* ================= misc ================= */
+  el('verTag').addEventListener('click', () => {
+    navigator.clipboard && navigator.clipboard.writeText('v1.2.0').then(() =>
+      showToast('Version copied — paste it in your support message.', 'info'));
+  });
+  el('ctaScroll').addEventListener('click', () => form.scrollIntoView({ behavior: 'smooth' }));
+  el('mbBtn').addEventListener('click', () => { form.scrollIntoView({ behavior: 'smooth' }); });
+
+  /* ================= init ================= */
+  loadState();
+  prefillDate();
+  recalc();
+})();
+</script>
+</body>
+</html>

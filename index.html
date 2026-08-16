@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RemoteOps Portal — Onboarding & Cost Calculator</title>
 <link rel="icon" type="image/jpeg" href="./Gemini_Generated_Image_h487zxh487zxh487.jpg">
-
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   input[type="date"] {
     background-color: rgba(255, 255, 255, 0.05);
@@ -214,7 +214,7 @@ input[type="date"]::-webkit-date-and-time-value {
         <div class="chip-row" id="chipRow" aria-label="Per-service hour breakdown"></div>
       </section>
 
-      <form action="https://api.web3forms.com/submit" method="POST" id="onboardForm" novalidate>
+      <form id="onboardForm" novalidate>
         <section class="card" aria-label="Your details">
           <h3>3 · Your details</h3>
           <div class="field" id="f-name">
@@ -622,9 +622,6 @@ input[type="date"]::-webkit-date-and-time-value {
     const svcs = SERVICES.filter(s => selected.has(s.id));
     const { alloc, weekly, blended } = allocateHours(total, svcs);
     renderChips(alloc);
-    document.getElementById('hiddenHours').value = total;
-    document.getElementById('hiddenServices').value = svcs.map(s => s.name || s.id).join(', ');
-    document.getElementById('hiddenMonthly').value = fmtMoney(monthlyTotal(weekly));
 
     sumServicesEl.innerHTML = svcs.length
       ? svcs.map(s => `<div class="row svc-line"><span class="lbl">${s.name}</span><span class="val">$${s.rate}/hr</span></div>`).join('')

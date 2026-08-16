@@ -30,6 +30,26 @@
     display:grid;place-items:center;font-weight:800;color:#fff;box-shadow:0 6px 18px rgba(99,102,241,.35)}
   header h1{font-size:19px;font-weight:700;letter-spacing:.2px}
   header p{color:var(--muted);font-size:13px}
+      
+        input[type="date"] {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="date"]::-webkit-date-and-time-value {
+            text-align: left;
+        }
+    </style>
+</head>
   .ver-tag{margin-left:auto;font-size:12px;color:var(--dim);background:var(--panel);border:1px solid var(--line);
     padding:4px 10px;border-radius:999px;cursor:pointer;user-select:none;transition:border-color .2s}
   .ver-tag:hover{border-color:var(--indigo);color:var(--text)}

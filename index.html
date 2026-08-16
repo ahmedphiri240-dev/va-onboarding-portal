@@ -205,7 +205,7 @@ input[type="date"]::-webkit-date-and-time-value {
         <div class="range-row">
           <span class="hours-val" id="hoursVal">20<small> hrs/wk</small></span>
           <span class="preset" tabindex="0" role="button" data-hours="10">10h</span>
-          
+          <span class="preset" tabindex="0" role="button" data-hours="20" style="border-color: var(--indigo); display: inline-flex; align-items: center; gap: 6px;">20h <span style="background: linear-gradient(135deg, var(--brand1), var(--brand2)); color: #fff; font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: 700; text-transform: uppercase;">Popular</span></span>
           <span class="preset" tabindex="0" role="button" data-hours="30">30h</span>
         </div>
         <input type="range" id="hoursSlider" min="5" max="40" step="any" value="20"
@@ -254,14 +254,21 @@ input[type="date"]::-webkit-date-and-time-value {
             <div class="err-msg">Please pick a future start date.</div>
           </div>
           <div class="submit-row">
-            <button type="submit" class="btn primary" id="submitBtn">Submit Request &amp; Book Strategy Call</button>
-            <button type="reset" class="btn ghost" id="resetBtn">Reset</button>
-          </div>
+    <input type="hidden" name="access_key" value="8192fb09-60b3-46c3-9b7e-1682149c9173">
+    <input type="hidden" name="Total_Weekly_Hours" id="hiddenHours" value="0">
+    <input type="hidden" name="Selected_Services" id="hiddenServices" value="None">
+    <input type="hidden" name="Estimated_Monthly" id="hiddenMonthly" value="$0">
+    <button type="submit" class="btn primary" id="submitBtn">Submit Request &amp; Book Strategy Call</button>
+    <button type="reset" class="btn ghost" id="resetBtn">Reset</button>
+</div>
         </section>
       </form>
     </div>
 
     <aside class="card summary" id="summaryCard" aria-label="Live estimate">
+      <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; text-align: center; font-size: 11px; font-weight: 600; color: #fbbf24; display: flex; align-items: center; justify-content: center; gap: 6px;">
+    <span>🔥</span> Only 2 onboarding slots left this week
+</div>
       <h3>Live estimate</h3>
       <div id="sumServices"><p style="color:var(--dim);font-size:13px">No services selected yet.</p></div>
       <div class="row"><span class="lbl">Total weekly hours</span><span class="val" id="sumHours">0</span></div>
@@ -270,6 +277,18 @@ input[type="date"]::-webkit-date-and-time-value {
       <div class="row big"><span class="lbl">Estimated monthly</span><span class="val big" id="sumMonthly"><span>$0</span></span></div>
       <p style="color:var(--dim);font-size:12px;margin-top:10px">Typical turnaround: plan delivered within 48h of your strategy call.</p>
       <button class="cta" id="ctaScroll">Start my plan</button>
+      <div style="text-align: center; margin-top: 12px; font-size: 11px; color: var(--muted); line-height: 1.4;">
+    ✓ No long-term lock-in &bull; Onboarded in 48 hours
+</div>
+      <div style="margin-top: 16px; margin-bottom: 16px; padding: 14px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; gap: 8px;">
+    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px;">Every plan includes:</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text);">
+        <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="color: var(--good);">✓</span> Dedicated VA</span>
+        <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="color: var(--good);">✓</span> Zero Overhead</span>
+        <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="color: var(--good);">✓</span> 48h Onboarding</span>
+        <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="color: var(--good);">✓</span> Cancel Anytime</span>
+    </div>
+</div>
     </aside>
   </div>
 </main>

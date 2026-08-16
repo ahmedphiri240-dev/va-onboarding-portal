@@ -254,9 +254,13 @@ input[type="date"]::-webkit-date-and-time-value {
             <div class="err-msg">Please pick a future start date.</div>
           </div>
           <div class="submit-row">
-            <button type="submit" class="btn primary" id="submitBtn">Submit Request &amp; Book Strategy Call</button>
-            <button type="reset" class="btn ghost" id="resetBtn">Reset</button>
-          </div>
+    <input type="hidden" name="access_key" value="8192fb09-60b3-46c3-9b7e-1682149c9173">
+    <input type="hidden" name="Total_Weekly_Hours" id="hiddenHours" value="0">
+    <input type="hidden" name="Selected_Services" id="hiddenServices" value="None">
+    <input type="hidden" name="Estimated_Monthly" id="hiddenMonthly" value="$0">
+    <button type="submit" class="btn primary" id="submitBtn">Submit Request &amp; Book Strategy Call</button>
+    <button type="reset" class="btn ghost" id="resetBtn">Reset</button>
+</div>
         </section>
       </form>
     </div>
